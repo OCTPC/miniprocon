@@ -10,7 +10,7 @@
 (defparameter *counter* nil)
 (defparameter *dispatch-table* nil)
 
-;;
+;; Server
 
 (defun check-prime (n)
   (cond ((< n 2) nil)
@@ -20,7 +20,7 @@
             :when (= (mod n i) 0)
             return T) nil)
         (T T)))
-  
+
 (defun check-answer (answer)
   (let ((x 0)
         (y 0)
@@ -97,4 +97,4 @@
                                                      (loop-finish)
                                                      :do (sleep 0.001))))))
 
-;; 
+;; UI Server
