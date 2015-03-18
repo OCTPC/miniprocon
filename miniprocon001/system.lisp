@@ -98,11 +98,12 @@
                                (steps (cadadr data))
                                (milliseconds (caddr data)))
                            (cl-markup:markup
-                            (:td n)
-                            (:td token)
-                            (:td exchange)
-                            (:td steps)
-                            (:td milliseconds)))))))))
+                            (:tr
+                             (:td n)
+                             (:td token)
+                             (:td exchange)
+                             (:td steps)
+                             (:td milliseconds))))))))))
 
   (hunchentoot:define-easy-handler (post :uri "/post") (token answer)
     (setf (hunchentoot:content-type*) "text/plain")
