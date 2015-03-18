@@ -48,6 +48,19 @@
         (list num-of-move steps)
         nil)))
 
+(defun make-ranking (answers)
+  (delete-duplicates (sort (copy-list answers)
+                           #'(lambda (a b)
+                               (cond ((< (caadr a) (caadr b)) T)
+                                     ((> (caadr a) (caadr b)) nil)
+                                     ((< (cadadr a) (cadadr b)) T)
+                                     ((> (cadadr a) (cadadr b)) nil)
+                                     ((< (caddr a) (caddr b)) T)
+                                     ((> (caddr a) (caddr b)) nil))))
+                     :test (lambda (a b)
+                             (string= (car a) (car b)))
+                     :from-end T))
+
 (defun start-srv ()
   (setf hunchentoot:*acceptor* (make-instance 'hunchentoot:easy-acceptor :port 4242))
   (hunchentoot:start hunchentoot:*acceptor*)
@@ -55,6 +68,7 @@
 
 (defun init-srv ()
   (reset-srv)
+  
   (hunchentoot:define-easy-handler (form :uri "/form") ()
     (setf (hunchentoot:content-type*) "text/html")
     (cl-markup:markup
@@ -64,6 +78,32 @@
                   (:p "answer: " (:br)
                       (:textarea :name "answer" :cols "40" :rows "10" ""))
                   (:input :type "submit" :value "submit")))))
+  
+  (hunchentoot:define-easy-handler (ranking :uri "/ranking") ()
+    (setf (hunchentoot:content-type*) "text/html")
+    (cl-markup:markup
+     (html (:table
+            (:thread
+             (:tr
+              (:th "#")
+              (:th "token")
+              (:th "exchange")
+              (:th "steps")
+              (:th "milliseconds")))
+            (:tbody
+             (loop :for data :in (make-ranking *answers*)
+                :for n :from 1
+                :collect (let ((token (car data))
+                               (exchange (caadr data))
+                               (steps (cadadr data))
+                               (milliseconds (caddr data)))
+                           (cl-markup:markup
+                            (:td n)
+                            (:td token)
+                            (:td exchange)
+                            (:td steps)
+                            (:td milliseconds)))))))))
+
   (hunchentoot:define-easy-handler (post :uri "/post") (token answer)
     (setf (hunchentoot:content-type*) "text/plain")
     (let ((score (check-answer answer))
@@ -109,3 +149,4 @@
                                                      :do (sleep 0.001))))))
 
 ;; UI Server
+
