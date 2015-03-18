@@ -10,10 +10,41 @@
 (defparameter *counter* nil)
 (defparameter *dispatch-table* nil)
 
-;; 問題公開・回答提出用サーバ
+;;
 
+(defun check-prime (n)
+  (cond ((< n 2) nil)
+        ((= n 2) T)
+        ((evenp n) nil)
+        ((loop :for i :from 3 :until (>= i (/ n i))
+            :when (= (mod n i) 0)
+            return T) nil)
+        (T T)))
+  
 (defun check-answer (answer)
-  T)
+  (let ((x 0)
+        (y 0)
+        (steps 0)
+        (num-of-move 0))
+    (with-input-from-string (in answer)
+      (loop :named l :for line := (read-line in nil nil) :while line
+         :do (let ((dir (subseq line 0 1))
+                   (step (or (parse-integer (subseq line 1) :junk-allowed t) 0)))
+               ;; (format t "[~A ~A]" dir steps)
+               (if (and (find dir '("R" "L" "U" "D") :test #'string=) (check-prime step))
+                   (progn 
+                     (cond ((string= dir "R") (setf x (+ x step)))
+                           ((string= dir "L") (setf x (- x step)))
+                           ((string= dir "U") (setf y (+ y step)))
+                           ((string= dir "D") (setf y (- y step)))
+                           (T (return-from l nil)))
+                     (setf steps (+ steps step))
+                     (setf num-of-move (1+ num-of-move)))
+                   (return-from l nil)))))
+    ;; (print (cons x y))
+    (if (equal *problem* (cons x y))
+        (list num-of-move steps)
+        nil)))
 
 (defun start-srv ()
   (setf hunchentoot:*acceptor* (make-instance 'hunchentoot:easy-acceptor :port 4242))
@@ -24,11 +55,12 @@
   (reset-srv)
   (hunchentoot:define-easy-handler (post :uri "/post") (token answer)
     (setf (hunchentoot:content-type*) "text/plain")
-    (let ((score (check-answer answer)))
+    (let ((score (check-answer answer))
+          (time (- (get-internal-real-time) *starttime*)))
       (if score
-          (progn (push (cons token score) *answers*)
-                 "回答を受け付けました")
-          "回答に不備があるっぽい？"))))
+          (progn (push (list token score time) *answers*)
+                 "OK")
+          "FAILED"))))
 
 (defun stop-srv ()
   (hunchentoot:stop hunchentoot:*acceptor*))
@@ -60,10 +92,9 @@
   (setf *starttime* (+ (* (read) 60 1000) (get-internal-real-time)))
   (setf *counter* (bordeaux-threads:make-thread (lambda ()
                                                   (loop
-                                                     if (<= *starttime* (get-internal-real-time))
-                                                     do (start-match)
-                                                       (loop-finish)
-                                                     do (sleep 0.001))))))
+                                                     :if (<= *starttime* (get-internal-real-time))
+                                                     :do (start-match)
+                                                     (loop-finish)
+                                                     :do (sleep 0.001))))))
 
-
-;; UI用サーバ
+;; 
