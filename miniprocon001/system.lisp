@@ -106,12 +106,14 @@
 
   (hunchentoot:define-easy-handler (post :uri "/post") (token answer)
     (setf (hunchentoot:content-type*) "text/plain")
-    (let ((score (check-answer answer))
-          (time (- (get-internal-real-time) *starttime*)))
-      (if score
-          (progn (push (list token score time) *answers*)
-                 "OK")
-          "FAILED"))))
+    (if (not (and token answer))
+        "invalid input"
+        (let ((score (check-answer answer))
+              (time (- (get-internal-real-time) *starttime*)))
+          (if score
+              (progn (push (list token score time) *answers*)
+                     "OK")
+              "FAILED")))))
 
 (defun stop-srv ()
   (hunchentoot:stop hunchentoot:*acceptor*))
