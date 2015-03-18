@@ -8,9 +8,15 @@
 (defparameter *problem* nil)
 (defparameter *starttime* nil)
 (defparameter *counter* nil)
-(defparameter *dispatch-table* nil)
 
 (defparameter *posturl* "http://localhost:4242/post")
+
+(setf hunchentoot:*dispatch-table*
+      (list
+       'hunchentoot:dispatch-easy-handlers
+       (hunchentoot:create-folder-dispatcher-and-handler "/css/" (merge-pathnames "res/css/"))
+       (hunchentoot:create-folder-dispatcher-and-handler "/js/" (merge-pathnames "res/js/"))
+       (hunchentoot:create-folder-dispatcher-and-handler "/js/" (merge-pathnames "res/fonts/"))))
 
 ;; Server
 
@@ -82,28 +88,40 @@
   (hunchentoot:define-easy-handler (ranking :uri "/ranking") ()
     (setf (hunchentoot:content-type*) "text/html")
     (cl-markup:markup
-     (html (:table
-            (:thread
-             (:tr
-              (:th "#")
-              (:th "token")
-              (:th "exchange")
-              (:th "steps")
-              (:th "milliseconds")))
-            (:tbody
-             (loop :for data :in (make-ranking *answers*)
-                :for n :from 1
-                :collect (let ((token (car data))
-                               (exchange (caadr data))
-                               (steps (cadadr data))
-                               (milliseconds (caddr data)))
-                           (cl-markup:markup
-                            (:tr
-                             (:td n)
-                             (:td token)
-                             (:td exchange)
-                             (:td steps)
-                             (:td milliseconds))))))))))
+     (html
+      (:head
+       (:meta :charset "utf-8")
+       (:meta :http-equiv "X-UA-Compatible" :content "IE=edge")
+       (:meta :name "viewport" :content "width=device-width, initial-scale=1")
+       (:title "Ranking")
+       (:link :href "css/bootstrap.min.css" :rel "stylesheet"))
+      (:body
+       (:h1 :align "center" "Ranking")
+       (:div :class "container"
+             (:table :class "table table-striped table-bordered table-hover"
+                     (:thread
+                      (:tr
+                       (:th "#")
+                       (:th "token")
+                       (:th "exchange")
+                       (:th "steps")
+                       (:th "milliseconds")))
+                     (:tbody
+                      (loop :for data :in (make-ranking *answers*)
+                         :for n :from 1
+                         :collect (let ((token (car data))
+                                        (exchange (caadr data))
+                                        (steps (cadadr data))
+                                        (milliseconds (caddr data)))
+                                    (cl-markup:markup
+                                     (:tr
+                                      (:td :align "center" n)
+                                      (:td :align "center" token)
+                                      (:td :align "right" exchange)
+                                      (:td :align "right" steps)
+                                      (:td :align "right" milliseconds)))))))
+             (:script :src "js/jquery.min.js")
+             (:script :src "js/bootstrap.min.js"))))))
 
   (hunchentoot:define-easy-handler (post :uri "/post") (token answer)
     (setf (hunchentoot:content-type*) "text/plain")
