@@ -1,6 +1,6 @@
 (ql:quickload :hunchentoot)
 (ql:quickload :hunchensocket)
-(ql:quickload :cl-who)
+(ql:quickload :cl-markup)
 (ql:quickload :bordeaux-threads)
 
 ;; params
@@ -9,6 +9,8 @@
 (defparameter *starttime* nil)
 (defparameter *counter* nil)
 (defparameter *dispatch-table* nil)
+
+(defparameter *posturl* "http://localhost:4242/post")
 
 ;; Server
 
@@ -53,6 +55,15 @@
 
 (defun init-srv ()
   (reset-srv)
+  (hunchentoot:define-easy-handler (form :uri "/form") ()
+    (setf (hunchentoot:content-type*) "text/html")
+    (cl-markup:markup
+     (html (:form :action *posturl* :method "post"
+                  (:p "token: " (:br)
+                      (:input :type "text" :name "token" :size "20"))
+                  (:p "answer: " (:br)
+                      (:textarea :name "answer" :cols "40" :rows "10" ""))
+                  (:input :type "submit" :value "submit")))))
   (hunchentoot:define-easy-handler (post :uri "/post") (token answer)
     (setf (hunchentoot:content-type*) "text/plain")
     (let ((score (check-answer answer))
