@@ -1,7 +1,7 @@
-(ql:quickload :hunchentoot)
-(ql:quickload :hunchensocket)
-(ql:quickload :cl-markup)
-(ql:quickload :bordeaux-threads)
+(ql:quickload '(hunchentoot
+                hunchensocket
+                cl-markup
+                bordeaux-threads))
 
 ;; params
 (defparameter *answers* nil)
