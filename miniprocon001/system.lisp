@@ -16,7 +16,8 @@
        'hunchentoot:dispatch-easy-handlers
        (hunchentoot:create-folder-dispatcher-and-handler "/css/" (merge-pathnames "res/css/"))
        (hunchentoot:create-folder-dispatcher-and-handler "/js/" (merge-pathnames "res/js/"))
-       (hunchentoot:create-folder-dispatcher-and-handler "/js/" (merge-pathnames "res/fonts/"))))
+       (hunchentoot:create-folder-dispatcher-and-handler "/js/" (merge-pathnames "res/fonts/"))
+       (hunchentoot:create-folder-dispatcher-and-handler "/" (merge-pathnames "res/html/"))))
 
 ;; Server
 
@@ -70,7 +71,8 @@
 (defun start-srv ()
   (setf hunchentoot:*acceptor* (make-instance 'hunchentoot:easy-acceptor :port 4242))
   (hunchentoot:start hunchentoot:*acceptor*)
-  (init-srv))
+  (init-srv)
+  (start-ui))
 
 (defun init-srv ()
   (reset-srv)
@@ -93,12 +95,13 @@
        (:meta :charset "utf-8")
        (:meta :http-equiv "X-UA-Compatible" :content "IE=edge")
        (:meta :name "viewport" :content "width=device-width, initial-scale=1")
+       (:meta :http-equiv "refresh" :content "1")
        (:title "Ranking")
        (:link :href "css/bootstrap.min.css" :rel "stylesheet"))
       (:body
        (:h1 :align "center" "Ranking")
        (:div :class "container"
-             (:table :class "table table-striped table-bordered table-hover"
+             (:table :class "table table-bordered table-hover"
                      (:thread
                       (:tr
                        (:th "#")
@@ -146,7 +149,8 @@
   (setf *answers* nil)
   (hunchentoot:define-easy-handler (problem :uri "/problem") ()
     (setf (hunchentoot:content-type*) "text/plain")
-    (format nil "~A ~A" (car *problem*) (cdr *problem*))))
+    (format nil "~A ~A" (car *problem*) (cdr *problem*)))
+  (broadcast "start"))
 
 (defun set-problem ()
   (format t "set goal-point~%")
@@ -162,12 +166,40 @@
   (set-problem)
   (format t "(min): ")
   (setf *starttime* (+ (* (read) 60 1000) (get-internal-real-time)))
-  (setf *counter* (bordeaux-threads:make-thread (lambda ()
-                                                  (loop
-                                                     :if (<= *starttime* (get-internal-real-time))
-                                                     :do (start-match)
-                                                     (loop-finish)
-                                                     :do (sleep 0.001))))))
+  (setf *counter* (bordeaux-threads:make-thread
+                   (lambda ()
+                     (loop
+                        :if (<= *starttime* (get-internal-real-time))
+                        :do (start-match)
+                        (loop-finish)
+                        :do (sleep 0.003)
+                        (let* ((ti (- *starttime* (get-internal-real-time)))
+                               (h (floor ti (* 1000 60 60)))
+                               (m (mod (floor ti (* 1000 60)) 60))
+                               (s (mod (floor ti 1000) 60))
+                               (ms (mod (floor ti 10) 100)))
+                          (broadcast (format nil "~2,'0D:~2,'0D:~2,'0D:~2,'0D" h m s ms))))))))
 
 ;; UI Server
+(defclass ui (hunchensocket:websocket-resource)
+  ((name :initarg :name :initform (error "Name this room!") :reader name))
+  (:default-initargs :client-class 'user))
 
+(defclass user (hunchensocket:websocket-client)
+  ((name :initarg :user-agent :reader name :initform (error "Name this user!"))))
+
+(defvar *uis* (list (make-instance 'ui :name "/timer")))
+
+(defun find-ui (request)
+  (find (hunchentoot:script-name request) *uis* :test #'string= :key #'name))
+
+(pushnew 'find-ui hunchensocket:*websocket-dispatch-table*)
+
+(defun broadcast (message)
+  (loop for peer in (hunchensocket:clients (car *uis*))
+        do (hunchensocket:send-text-message peer message)))
+
+(defvar *server* (make-instance 'hunchensocket:websocket-acceptor :port 12345))
+
+(defun start-ui ()
+  (hunchentoot:start *server*))
