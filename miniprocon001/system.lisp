@@ -9,7 +9,7 @@
 (defparameter *starttime* nil)
 (defparameter *counter* nil)
 
-(defparameter *posturl* "http://localhost:4242/post")
+(defparameter *posturl* "http://localhost/post")
 
 (setf hunchentoot:*dispatch-table*
       (list
@@ -39,7 +39,6 @@
       (loop :named l :for line := (read-line in nil nil) :while line
          :do (let ((dir (subseq line 0 1))
                    (step (or (parse-integer (subseq line 1) :junk-allowed t) 0)))
-               ;; (format t "[~A ~A]" dir steps)
                (if (and (find dir '("R" "L" "U" "D") :test #'string=) (check-prime step))
                    (progn 
                      (cond ((string= dir "R") (setf x (+ x step)))
@@ -50,7 +49,6 @@
                      (setf steps (+ steps step))
                      (setf num-of-move (1+ num-of-move)))
                    (return-from l nil)))))
-    ;; (print (cons x y))
     (if (equal *problem* (cons x y))
         (list num-of-move steps)
         nil)))
@@ -106,7 +104,7 @@
                       (:tr
                        (:th "#")
                        (:th "token")
-                       (:th "exchange")
+                       (:th "idou")
                        (:th "steps")
                        (:th "milliseconds")))
                      (:tbody
@@ -163,6 +161,7 @@
     (setf *problem* (cons x y))))
 
 (defun start-timer ()
+  (reset-srv)
   (set-problem)
   (format t "(min): ")
   (setf *starttime* (+ (* (read) 60 1000) (get-internal-real-time)))
