@@ -10,3 +10,5 @@
 * [hunchensocket](https://github.com/capitaomorte/hunchensocket)
 * [cl-markup](https://github.com/arielnetworks/cl-markup)
 * [bordeaux-threads](https://common-lisp.net/projects/bordeaux-threads/)
+* [bootstrap](https://github.com/twbs/bootstrap)
+* [jQuery](https://jquery.com/)
