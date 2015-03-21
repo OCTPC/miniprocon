@@ -4,7 +4,7 @@ var time = document.getElementById('time');
 ws.onmessage = function(e) {
     var d = e.data;
     if ( d == "start" ) {
-	document.location = "http://localhost:4242/ranking";
+	document.location = "http://localhost/ranking";
     } else {
 	time.textContent = d;
     }
