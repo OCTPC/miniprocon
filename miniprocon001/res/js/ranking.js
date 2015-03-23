@@ -1,4 +1,0 @@
-function rld()
-{
-    location.reload();
-}
