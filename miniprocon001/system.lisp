@@ -68,6 +68,7 @@
 
 (defun start-srv ()
   (setf hunchentoot:*acceptor* (make-instance 'hunchentoot:easy-acceptor :port 4242))
+  (setf (hunchentoot:acceptor-access-log-destination hunchentoot:*acceptor*) #p"server.log")
   (hunchentoot:start hunchentoot:*acceptor*)
   (init-srv)
   (start-ui))
@@ -201,4 +202,5 @@
 (defvar *server* (make-instance 'hunchensocket:websocket-acceptor :port 12345))
 
 (defun start-ui ()
-  (hunchentoot:start *server*))
+  (hunchentoot:start *server*)
+  (setf (hunchentoot:acceptor-access-log-destination *server*) #p"uiserver.log"))
