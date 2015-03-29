@@ -29,7 +29,7 @@ CountdownTimer.prototype={
 }
 
 function CDT(){
- var tl = new Date('2015/03/26 17:00:00');
+ var tl = new Date('2015/04/02 17:00:00');
  var timer = new CountdownTimer('CDT',tl,'はじめぇ！');
  timer.countDown();
 }
